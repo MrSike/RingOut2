@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+</head>
+<body>
+<canvas id='game'>
+<script>
+
+	var canvas = document.getElementById('game');
+	var context = canvas.getContext('2d');
+	var lastUpdate = new Date().getTime();
+	//context.translate(0.5,0.5);
+
+	function resize(){
+		document.getElementById('game').width = window.innerWidth;
+		document.getElementById('game').height = window.innerHeight;
+	}
+
+	function initialize(){
+		resize();
+		var size = (window.innerWidth > window.innerHeight) ? window.innerHeight : window.innerWidth;
+		var player = new ball(25);
+		var rings = [new ring(size/3*1/2,'red'),new ring(size/3*2/2,'blue'),new ring(size/3*3/2,'green')];
+		lastUpdate = new Date().getTime()/1000;
+		play(player,rings,size);
+	}
+
+	function play(player,rings,size){
+		var now = new Date().getTime()/1000;
+		var deltaTime = now - lastUpdate;
+		lastUpdate = now;
+		console.log(player.score);
+		update(player,rings,size,deltaTime);
+		draw(player,rings);
+		
+		window.requestAnimationFrame(function(){
+			play(player,rings,size);
+		});
+	}
+
+	function update(player,rings,size,deltaTime){
+		for(var i=0; i < rings.length; i++){
+			rings[i].update(size,deltaTime,player);
+		}
+		player.update();
+	}
+
+	function draw(player,rings){
+		context.clearRect(0,0,canvas.width,canvas.height);
+		for(var i=0; i < rings.length; i++){
+			rings[i].draw();
+		}
+		player.draw();
+		context.fillText(player.score,10,10);
+	}
+
+	function restartGame(){
+		initialize();
+	}
+
+	function ball(radius){
+		this.x = canvas.width/2;
+		this.y = canvas.height/2;
+		this.radius = radius;
+		this.score = 0;
+		this.draw = function(){
+			context.beginPath();
+			context.arc(this.x,this.y,this.radius,1 * Math.PI,2 * Math.PI,true);
+			context.fillStyle = 'green';
+			context.fill();
+			context.lineWidth = 1;
+			context.strokeStyle = 'black';
+			context.stroke();
+		}
+		this.update = function(){
+
+		}
+	}
+
+	function ring(radius,color){
+		this.x = canvas.width/2;
+		this.y = canvas.height/2;
+		this.radius = radius;
+		this.offset = Math.random() * 2;
+		this.expansion = 20;
+		this.color = color;
+		this.draw = function(){
+			context.beginPath();
+			context.arc(this.x,this.y,this.radius,this.offset * Math.PI,(this.offset + .1) * Math.PI,true);
+			context.lineWidth = 5;
+			context.strokeStyle = this.color;
+			context.stroke();
+		}
+		this.update = function(size,deltaTime,player){
+			if(this.radius > size/2){
+				this.radius = (this.expansion + player.score) * deltaTime;
+				this.offset = Math.random() * 2;
+				player.score += 1;
+			}else{
+				this.radius += (this.expansion + player.score) * deltaTime;
+			}
+		}
+	}
+
+	window.onload=initialize();
+</script>
+<link rel='stylesheet' type='text/css' href='theme.css'>
+</body>
+</html>
